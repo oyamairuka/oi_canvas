@@ -9,15 +9,15 @@ public class LockManager
         internal ref int I() { return ref i_; }
     }
 
-    public class LockObject : IDisposable
+    public class LockHandle : IDisposable
     {
         private bool disposed_;
         private readonly Flag f_;
         private bool haveLocked_;
-        public LockObject(Flag f) { f_ = f; }
+        public LockHandle(Flag f) { f_ = f; }
 
         // アンマネージドリソースが追加されたらファイナライザを定義する
-        // ~LockObject()
+        // ~LockHandle()
         // {
         //     Dispose(false);
         // }
@@ -68,5 +68,5 @@ public class LockManager
     private readonly Flag f_;
     public LockManager() { f_ = new(); }
 
-    public LockObject CreateLockObject() { return new LockObject(f_); }
+    public LockHandle CreateLockHandle() { return new LockHandle(f_); }
 }

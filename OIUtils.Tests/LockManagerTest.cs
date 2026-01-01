@@ -4,23 +4,23 @@ namespace OIUtils.Tests;
 public sealed class LockManagerTest
 {
     [TestMethod]
-    public void CreateLockObject_WithNoConditions_GivesNewLockObject()
-    {   // 毎回新しいロックオブジェクトが返ることを確認する
+    public void CreateLockHandle_WithNoConditions_GivesNewLockHandle()
+    {   // 毎回新しいロックハンドルが返ることを確認する
         LockManager lockManager = new();
 
-        using LockManager.LockObject a = lockManager.CreateLockObject();
-        using LockManager.LockObject b = lockManager.CreateLockObject();
+        using LockManager.LockHandle a = lockManager.CreateLockHandle();
+        using LockManager.LockHandle b = lockManager.CreateLockHandle();
         Assert.IsFalse(ReferenceEquals(a, b));
     }
 
-    // LockObjectのテストここから
+    // LockHandleのテストここから
     [TestMethod]
     public void Try_WithSameLockManager_RelatedToSameFlag()
     {   // 同一のLockManagerから作られた場合は同一のコンディションのフラグに関連することを確認する
         LockManager lockManager = new();
 
-        using LockManager.LockObject a = lockManager.CreateLockObject();
-        using LockManager.LockObject b = lockManager.CreateLockObject();
+        using LockManager.LockHandle a = lockManager.CreateLockHandle();
+        using LockManager.LockHandle b = lockManager.CreateLockHandle();
 
         bool resultA = a.Try();
         bool resultB = b.Try();
@@ -44,13 +44,33 @@ public sealed class LockManagerTest
         LockManager lockManagerA = new();
         LockManager lockManagerB = new();
 
-        using LockManager.LockObject a = lockManagerA.CreateLockObject();
-        using LockManager.LockObject b = lockManagerB.CreateLockObject();
+        using LockManager.LockHandle a = lockManagerA.CreateLockHandle();
+        using LockManager.LockHandle b = lockManagerB.CreateLockHandle();
 
         bool resultA = a.Try();
         bool resultB = b.Try();
 
         Assert.IsTrue(resultA);
         Assert.IsTrue(resultB);
+    }
+
+    [TestMethod]
+    public void Dispose_WithOutOfScope_ReleaseLock()
+    {   // スコープ外になったときに自動的にロックが解放されることを確認する
+        LockManager lockManager = new();
+
+        using var l = lockManager.CreateLockHandle();
+        {
+            using var a = lockManager.CreateLockHandle();
+            bool resultA = a.Try();
+            Assert.IsTrue(resultA);
+
+            bool resultInScope = l.Try();
+            Assert.IsFalse(resultInScope);
+        }
+
+        // スコープ外になったのでロック獲得に成功することを確認する
+        bool resultOutOfScope = l.Try();
+        Assert.IsTrue(resultOutOfScope);
     }
 }
