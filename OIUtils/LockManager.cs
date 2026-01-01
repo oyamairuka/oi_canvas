@@ -17,7 +17,7 @@ public class LockManager
         public LockObject(Flag f) { f_ = f; }
 
         // アンマネージドリソースが追加されたらファイナライザを定義する
-        // ~Lock()
+        // ~LockObject()
         // {
         //     Dispose(false);
         // }
@@ -31,6 +31,15 @@ public class LockManager
             return true;
         }
 
+        public void Release()
+        {
+            if (haveLocked_)
+            {
+                Interlocked.CompareExchange(ref f_.I(), 0, 1);
+                haveLocked_ = false;
+            }
+        }
+
         protected void Dispose(bool disposing)
         {
             if (!disposed_)
@@ -39,10 +48,7 @@ public class LockManager
                 {
                     if (haveLocked_)
                     {
-                        Console.WriteLine(f_.I());
-                        Interlocked.CompareExchange(ref f_.I(), 0, 1);
-                        Console.WriteLine(f_.I());
-                        haveLocked_ = false;
+                        Release();
                     }
                 }
                 // アンマネージドリソースがある場合は以下にその処理を追加
